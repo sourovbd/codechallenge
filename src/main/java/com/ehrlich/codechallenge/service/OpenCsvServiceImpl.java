@@ -4,7 +4,7 @@ import com.ehrlich.codechallenge.Entity.Pizza;
 import com.ehrlich.codechallenge.exception.GlobalException;
 import com.ehrlich.codechallenge.model.CsvPizzaData;
 import com.ehrlich.codechallenge.repository.PizzaCsvImportRepository;
-import com.ehrlich.codechallenge.validation.strategy.ManualImportedCsvDeviceMappingStrategy;
+import com.ehrlich.codechallenge.validation.strategy.PizzaCsvDataMappingStrategy;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.bean.CsvToBean;
@@ -47,7 +47,7 @@ public class OpenCsvServiceImpl implements OpenCsvService {
                 .withType(CsvPizzaData.class)
                 .withIgnoreLeadingWhiteSpace(true)
                 .withSeparator(',')
-                .withMappingStrategy(new ManualImportedCsvDeviceMappingStrategy<>(pizzaCsvImportRepository))
+                .withMappingStrategy(new PizzaCsvDataMappingStrategy<>(pizzaCsvImportRepository))
                 .withIgnoreQuotations(true)
                 .withThrowExceptions(true)
                 .build();
