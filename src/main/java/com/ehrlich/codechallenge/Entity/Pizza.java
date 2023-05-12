@@ -6,10 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-
 @Data
 @Entity
 @AllArgsConstructor
@@ -28,14 +24,14 @@ public class Pizza {
     @Column(name = "pizza_type_id", nullable = false)
     private String pizzaTypeId;
 
-    @Column(name = "pizza_types_id", nullable = false, unique = true)
+    @Column(name = "pizza_types_id")
     private Long pizzaTypesId;
 
     @Column(name = "size", nullable = false)
     private String size;
 
     @Column(name = "price", nullable = false)
-    private Long price;
+    private Double price;
 
     @ManyToOne(targetEntity = PizzaTypes.class, fetch = FetchType.LAZY)
     @JoinColumn(name = "pizza_types_id", referencedColumnName = "id", insertable = false, updatable = false)

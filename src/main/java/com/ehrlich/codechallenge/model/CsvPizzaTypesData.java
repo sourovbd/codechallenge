@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * CSV Pizza Data Import Model
+ * CSV Pizza Types Data import Model
  *
  * @author atequer_rahman
  */
@@ -15,18 +15,18 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CsvPizzaData {
+public class CsvPizzaTypesData {
 
     @CsvBindByPosition(position = 0)
-    private String pizzaId;
-
-    @CsvBindByPosition(position = 1)
     private String pizzaTypeId;
 
+    @CsvBindByPosition(position = 1)
+    private String name;
+
     @CsvBindByPosition(position = 2)
-    private String size;
+    private String category;
 
     @CsvBindByPosition(position = 3)
-    private Long price;
+    private String ingredients;
 
 }

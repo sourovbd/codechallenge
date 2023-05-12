@@ -6,9 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Data
 @Entity
 @AllArgsConstructor
@@ -30,7 +27,4 @@ public class Orders {
 
     @Column(name = "time", nullable = false)
     private String time;
-
-    @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderDetails> orderDetailsList;
 }

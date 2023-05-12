@@ -16,24 +16,38 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import java.io.IOException;
 
+import static com.ehrlich.codechallenge.util.Constants.FILE_UPLOAD_SUCCESSFUL;
+
 @Slf4j
 @Validated
 @CrossOrigin
 @RestController
 @RequiredArgsConstructor
 public class CSVImportController {
-    //private static final String IMPORT_CSV_API_PATH = "/import-csv-file";
+    private static final String IMPORT_CSV_API_PATH = "/import-csv-file";
 
     private final OpenCsvService openCsvService;
 
-    @PostMapping(path = "/import-csv-file")
-    public ResponseEntity<Object> importCsvFile(@RequestPart(value = "pizza_csv_file") @Valid @NotNullFile(message = "Pizza CSV file is missing.")
-                                                    @ValidMediaType(value = "text/csv", message = "Pizza CSV file is required.")
-                                                    @ValidCharset MultipartFile pizzaCsvFile) throws GlobalException, IOException{
+    @PostMapping(path = IMPORT_CSV_API_PATH)
+    public ResponseEntity<Object> importCsvFiles(@RequestPart(value = "pizza_csv_file") @Valid @NotNullFile(message = "Pizza CSV file is missing.")
+                                                 @ValidMediaType(value = "text/csv", message = "Pizza CSV file is required.")
+                                                 @ValidCharset MultipartFile pizzaCsvFile,
+                                                 @RequestPart(value = "pizza_types_csv_file") @Valid @NotNullFile(message = "Pizza Types CSV file is missing.")
+                                                 @ValidMediaType(value = "text/csv", message = "Pizza Types CSV file is required.")
+                                                 @ValidCharset MultipartFile pizzaTypesCsvFile,
+                                                 @RequestPart(value = "orders_csv_file") @Valid @NotNullFile(message = "Orders CSV file is missing.")
+                                                 @ValidMediaType(value = "text/csv", message = "Orders CSV file is required.")
+                                                 @ValidCharset MultipartFile ordersCsvFile,
+                                                 @RequestPart(value = "order_details_csv_file") @Valid @NotNullFile(message = "Order Details CSV file is missing.")
+                                                 @ValidMediaType(value = "text/csv", message = "Order Details CSV file is required.")
+                                                 @ValidCharset MultipartFile orderDetailsCsvFile) throws GlobalException, IOException {
 
-        log.info("START registerDevices: corp_id:{}");
+        log.info("START import csv files.");
+        openCsvService.importPizzaTypesCsvData(pizzaTypesCsvFile);
         openCsvService.importPizzaCsvData(pizzaCsvFile);
-        log.info("END registerDevices: corp_id:{}");
-        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+        openCsvService.importOrdersCsvData(ordersCsvFile);
+        openCsvService.importOrderDetailsCsvData(orderDetailsCsvFile);
+        log.info("END import csv files.");
+        return new ResponseEntity<>(FILE_UPLOAD_SUCCESSFUL, HttpStatus.OK);
     }
 }

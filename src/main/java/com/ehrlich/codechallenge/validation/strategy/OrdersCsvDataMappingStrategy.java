@@ -1,7 +1,6 @@
 package com.ehrlich.codechallenge.validation.strategy;
 
-import com.ehrlich.codechallenge.Entity.Pizza;
-import com.ehrlich.codechallenge.model.CsvPizzaData;
+import com.ehrlich.codechallenge.Entity.Orders;
 import com.opencsv.CSVReader;
 import com.opencsv.bean.MappingStrategy;
 import com.opencsv.exceptions.CsvBadConverterException;
@@ -12,9 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 
 @Slf4j
-public class PizzaCsvDataMappingStrategy<T extends Pizza> implements MappingStrategy<T> {
+public class OrdersCsvDataMappingStrategy<T extends Orders> implements MappingStrategy<T> {
 
-    public PizzaCsvDataMappingStrategy() {
+    public OrdersCsvDataMappingStrategy() {
 
     }
 
@@ -42,15 +41,18 @@ public class PizzaCsvDataMappingStrategy<T extends Pizza> implements MappingStra
 
     @Override
     public T populateNewBean(String[] line) throws CsvBeanIntrospectionException {
-        log.info("PROCESS: starting populateNewBean");
+        log.info("PROCESS: starting populateNewBean for csvOrdersData");
 
-        Pizza csvPizzaData = Pizza.builder()
-                .pizzaId(line[0])
-                .pizzaTypeId(line[1])
-                .size(line[2])
-                .price(Double.parseDouble(line[3]))
+        log.info("line[0]: "+line[0]);
+        log.info("line[1]: "+line[1]);
+        log.info("line[2]: "+line[2]);
+        Orders csvOrdersData = Orders.builder()
+                .orderId(Long.parseLong(line[0]))
+                .date(line[1])
+                .time(line[2])
                 .build();
-        log.info("PROCESS: ending populateNewBean");
-        return (T) csvPizzaData;
+
+        log.info("PROCESS: ending populateNewBean for csvOrdersData");
+        return (T) csvOrdersData;
     }
 }
