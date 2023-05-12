@@ -1,10 +1,18 @@
 package com.ehrlich.codechallenge.service;
 
+import com.ehrlich.codechallenge.Entity.OrderDetails;
+import com.ehrlich.codechallenge.Entity.Orders;
 import com.ehrlich.codechallenge.Entity.Pizza;
+import com.ehrlich.codechallenge.Entity.PizzaTypes;
 import com.ehrlich.codechallenge.exception.GlobalException;
-import com.ehrlich.codechallenge.model.CsvPizzaData;
+import com.ehrlich.codechallenge.repository.OrderDetailsCsvImportRepository;
+import com.ehrlich.codechallenge.repository.OrdersCsvImportRepository;
 import com.ehrlich.codechallenge.repository.PizzaCsvImportRepository;
-import com.ehrlich.codechallenge.validation.strategy.ManualImportedCsvDeviceMappingStrategy;
+import com.ehrlich.codechallenge.repository.PizzaTypesCsvImportRepository;
+import com.ehrlich.codechallenge.validation.strategy.OrderDetailsCsvDataMappingStrategy;
+import com.ehrlich.codechallenge.validation.strategy.OrdersCsvDataMappingStrategy;
+import com.ehrlich.codechallenge.validation.strategy.PizzaCsvDataMappingStrategy;
+import com.ehrlich.codechallenge.validation.strategy.PizzaTypesCsvDataMappingStrategy;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.bean.CsvToBean;
@@ -16,13 +24,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.yaml.snakeyaml.reader.UnicodeReader;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 
 /**
- * Service Class for processing import CSV file
+ * Service Class for processing import CSV files
  *
  * @author atequer_rahman
  */
@@ -32,36 +43,122 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class OpenCsvServiceImpl implements OpenCsvService {
 
     private final PizzaCsvImportRepository pizzaCsvImportRepository;
-    public List<CsvPizzaData> importPizzaCsvData(MultipartFile csvFile) throws GlobalException, IOException {
+    private final PizzaTypesCsvImportRepository pizzaTypesCsvImportRepository;
+    private final OrdersCsvImportRepository ordersCsvImportRepository;
+    private final OrderDetailsCsvImportRepository orderDetailsCsvImportRepository;
+
+    public void importPizzaCsvData(MultipartFile csvFile) throws GlobalException, IOException {
 
         log.info("START importPizzaCsvData: ");
 
-        Pizza pizza = new Pizza();
         CSVReader csvReader = new CSVReaderBuilder(new UnicodeReader(csvFile.getInputStream()))
                 .withFieldAsNull(CSVReaderNullFieldIndicator.BOTH)
                 .build();
 
-        CsvToBean<CsvPizzaData> csvToBean = new CsvToBeanBuilder<CsvPizzaData>(csvReader)
+        CsvToBean<Pizza> csvToBean = new CsvToBeanBuilder<Pizza>(csvReader)
                 .withOrderedResults(true)
-                .withSkipLines(0)
-                .withType(CsvPizzaData.class)
+                .withSkipLines(1)
+                .withType(Pizza.class)
                 .withIgnoreLeadingWhiteSpace(true)
                 .withSeparator(',')
-                .withMappingStrategy(new ManualImportedCsvDeviceMappingStrategy<>(pizzaCsvImportRepository))
+                .withMappingStrategy(new PizzaCsvDataMappingStrategy<>())
                 .withIgnoreQuotations(true)
                 .withThrowExceptions(true)
                 .build();
 
-        List<CsvPizzaData> csvDeviceDataList = new CopyOnWriteArrayList<>();
-        csvToBean.forEach(csvPizzaData -> {
-            pizza.setPizzaId(csvPizzaData.getPizzaId());
-            pizza.setPizzaTypeId(csvPizzaData.getPizzaTypeId());
-            pizza.setPrice(csvPizzaData.getPrice());
-            pizza.setSize(csvPizzaData.getSize());
-            pizzaCsvImportRepository.save(pizza);
-        });
+        List<Pizza> pizzaList = csvToBean.parse();
+        pizzaCsvImportRepository.saveAll(pizzaList.parallelStream()
+                .map(pizza -> {
+                    pizza.setPizzaTypesId(pizzaTypesCsvImportRepository.findByPizzaTypeId(pizza.getPizzaTypeId()).getId());
+                    return pizza;
+                })
+                .collect(Collectors.toList()));
 
         log.info("END importPizzaCsvData");
-        return csvDeviceDataList;
+    }
+
+    @Override
+    public void importPizzaTypesCsvData(MultipartFile csvFile) throws GlobalException, IOException {
+
+        log.info("START importPizzaTypesCsvData: ");
+
+        byte[] fileContent = csvFile.getBytes();
+        CSVReader csvReader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(fileContent), StandardCharsets.UTF_8))
+                .withFieldAsNull(CSVReaderNullFieldIndicator.BOTH)
+                .build();
+
+        CsvToBean<PizzaTypes> csvToBean = new CsvToBeanBuilder<PizzaTypes>(csvReader)
+                .withOrderedResults(true)
+                .withSkipLines(1)
+                .withType(PizzaTypes.class)
+                .withIgnoreLeadingWhiteSpace(true)
+                .withSeparator(',')
+                .withMappingStrategy(new PizzaTypesCsvDataMappingStrategy<>())
+                .withIgnoreQuotations(true)
+                .withThrowExceptions(true)
+                .build();
+
+        List<PizzaTypes> pizzaTypesList = csvToBean.parse();
+        pizzaTypesCsvImportRepository.saveAll(pizzaTypesList);
+
+        log.info("END importPizzaTypesCsvData");
+    }
+
+    @Override
+    public void importOrdersCsvData(MultipartFile csvFile) throws GlobalException, IOException {
+
+        log.info("START importOrdersCsvData: ");
+
+        byte[] fileContent = csvFile.getBytes();
+        CSVReader csvReader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(fileContent), StandardCharsets.UTF_8))
+                .withFieldAsNull(CSVReaderNullFieldIndicator.BOTH)
+                .build();
+
+        CsvToBean<Orders> csvToBean = new CsvToBeanBuilder<Orders>(csvReader)
+                .withOrderedResults(true)
+                .withSkipLines(1)
+                .withType(Orders.class)
+                .withIgnoreLeadingWhiteSpace(true)
+                .withSeparator(',')
+                .withMappingStrategy(new OrdersCsvDataMappingStrategy<>())
+                .withIgnoreQuotations(true)
+                .withThrowExceptions(true)
+                .build();
+
+        List<Orders> ordersList = csvToBean.parse();
+        ordersCsvImportRepository.saveAll(ordersList);
+
+        log.info("END importOrdersCsvData");
+    }
+
+    @Override
+    public void importOrderDetailsCsvData(MultipartFile csvFile) throws GlobalException, IOException {
+        log.info("START importOrderDetailsCsvData: ");
+
+        CSVReader csvReader = new CSVReaderBuilder(new UnicodeReader(csvFile.getInputStream()))
+                .withFieldAsNull(CSVReaderNullFieldIndicator.BOTH)
+                .build();
+
+        CsvToBean<OrderDetails> csvToBean = new CsvToBeanBuilder<OrderDetails>(csvReader)
+                .withOrderedResults(true)
+                .withSkipLines(1)
+                .withType(OrderDetails.class)
+                .withIgnoreLeadingWhiteSpace(true)
+                .withSeparator(',')
+                .withMappingStrategy(new OrderDetailsCsvDataMappingStrategy<>())
+                .withIgnoreQuotations(true)
+                .withThrowExceptions(true)
+                .build();
+
+        List<OrderDetails> orderDetailsList = csvToBean.parse();
+
+        orderDetailsCsvImportRepository.saveAll(orderDetailsList.parallelStream()
+                .map(orderDetails -> {
+                    orderDetails.setOrdersId(ordersCsvImportRepository.findByOrderId(orderDetails.getOrderId()).getId());
+                    return orderDetails;
+                })
+                .collect(Collectors.toList()));
+
+        log.info("END importOrderDetailsCsvData");
     }
 }

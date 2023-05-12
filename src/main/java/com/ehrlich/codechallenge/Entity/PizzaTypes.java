@@ -32,7 +32,4 @@ public class PizzaTypes {
 
     @Column(name = "ingredients", nullable = false)
     private String ingredients;
-
-    @OneToMany(mappedBy = "pizzaTypes", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Pizza> pizzas;
 }
